@@ -11,11 +11,15 @@ FACIAL_LANDMARK_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
 MINIMUM_EAR = 0.22
 MAXIMUM_FRAME_COUNT = 1
 eye_counter = 0
+EYE_CLOSED_COUNTER = 0
+data = [0]
+timer = [0]
 
 # Initializations
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks_GTX.dat")
 capture = cv.VideoCapture("video/ignore_video/filmik.mp4")
+start_time = time.perf_counter()
 
 
 def eye_aspect_ratio(eye):
@@ -32,12 +36,10 @@ def shape_to_np(shape, dtype="int"):
     return cord
 
 
-EYE_CLOSED_COUNTER = 0
-data = [0]
-timer = [0]
-start_time = time.perf_counter()
 while True:
     isTrue, frame = capture.read()
+    if not isTrue:
+        break
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     faces = detector(gray)
 
@@ -94,7 +96,6 @@ while True:
         d = scipy.signal.medfilt(data, 3)
         plt.plot(timer, d)
         plt.axhline(MINIMUM_EAR, color="r", linestyle="--")
-        plt.title("EAR")
         plt.xlabel("Time [s]")
         plt.ylabel("EAR")
         plt.show()
