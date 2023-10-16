@@ -1,3 +1,4 @@
+import csv
 import time
 import cv2 as cv
 import dlib
@@ -8,7 +9,7 @@ from scipy.spatial import distance as dist
 
 # Global Configuration Variables
 FACIAL_LANDMARK_PREDICTOR = "shape_predictor_68_face_landmarks.dat"
-MINIMUM_EAR = 0.22
+MINIMUM_EAR = 0.3
 MAXIMUM_FRAME_COUNT = 1
 eye_counter = 0
 EYE_CLOSED_COUNTER = 0
@@ -18,7 +19,7 @@ timer = [0]
 # Initializations
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks_GTX.dat")
-capture = cv.VideoCapture("video/ignore_video/filmik.mp4")
+capture = cv.VideoCapture("video/1.mp4")
 start_time = time.perf_counter()
 
 
@@ -36,10 +37,14 @@ def shape_to_np(shape, dtype="int"):
     return cord
 
 
+capture.set(cv.CAP_PROP_POS_FRAMES, 30*4)
+
+counter = 0
 while True:
-    isTrue, frame = capture.read()
+    isTrue, frame_big = capture.read()
     if not isTrue:
         break
+    frame = frame_big[300:1000, 200:900]
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     faces = detector(gray)
 
@@ -61,16 +66,10 @@ while True:
         cv.drawContours(frame, [leftEyeHull], -1, (255, 0, 0), 2)
         cv.drawContours(frame, [rightEyeHull], -1, (255, 0, 0), 2)
 
-        if ear < MINIMUM_EAR:
-            EYE_CLOSED_COUNTER += 1
-        else:
-            if EYE_CLOSED_COUNTER > 0:
-                eye_counter += 1
-            EYE_CLOSED_COUNTER = 0
-
+        counter += 1
         cv.putText(
             frame,
-            "EAR: {}".format(round(ear, 2)),
+            "FPS: {}".format(round(ear, 2)),
             (10, 30),
             cv.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -80,7 +79,7 @@ while True:
 
         cv.putText(
             frame,
-            f"Count: {eye_counter}",
+            f"Count: {counter}",
             (10, 50),
             cv.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -90,13 +89,12 @@ while True:
         data.append(ear)
         timer.append(time.perf_counter() - start_time)
     cv.imshow("Frame", frame)
-    if cv.waitKey(20) & 0xFF == ord("q"):
-        data.pop(0)
-        timer.pop(0)
-        d = scipy.signal.medfilt(data, 3)
-        plt.plot(timer, d)
-        plt.axhline(MINIMUM_EAR, color="r", linestyle="--")
-        plt.xlabel("Time [s]")
-        plt.ylabel("EAR")
-        plt.show()
+    if cv.waitKey(1) & 0xFF == ord("q"):
         break
+
+with open('data3.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    for i in range(len(data)):
+        row = [i, data[i]]
+        writer.writerow(row)
+
