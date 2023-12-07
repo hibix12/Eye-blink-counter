@@ -9,12 +9,9 @@ with open('data3.csv', 'r') as csvfile:
     reader = csv.reader(csvfile)
     values = [row for row in reader]
 
-    data = [float(item[1]) for item in values]  # skip the header row, assuming you have one
-
-    # PERCLOS counted for 1 minute (30fps = 1800 frames)
-
+    data = [float(item[1]) for item in values]
     sampling_rate = 30
-    window_size = 30 * 60 * 4  # 2 minutes window
+    window_size = sampling_rate * 30
 
     thresholds = []
     initial_threshold = (np.median(data[:window_size]) + min(data)) / 2
@@ -24,30 +21,31 @@ with open('data3.csv', 'r') as csvfile:
         threshold = (np.median(data[i - window_size:i]) + min(data[i - window_size:i])) / 2
         thresholds.append(threshold)
 
+    window_perclos = sampling_rate * 60 * 4
+
     frame_count = len(data)
-    if frame_count > window_size:
+    if frame_count > window_perclos:
         counter = []
         for i in range(frame_count):
             if data[i] > thresholds[i]:
-                counter.append(1)
-            else:
                 counter.append(0)
-        # windowing method, sum 1800 elements and then go to +1 one element
+            else:
+                counter.append(1)
         part_sum = 0
         suma = []
-        for i in range(window_size):
+        for i in range(window_perclos):
             part_sum += counter[i]
-        suma.append(part_sum / window_size)
-        for i in range(window_size, frame_count):
-            part_sum -= counter[i - window_size]
+        suma.append(part_sum / window_perclos)
+        for i in range(window_perclos, frame_count):
+            part_sum -= counter[i - window_perclos]
             part_sum += counter[i]
-            suma.append(part_sum / window_size)
+            suma.append(part_sum / window_perclos)
 
-        time_vector_seconds = np.linspace(window_size / sampling_rate, frame_count / sampling_rate,
-                                          frame_count - window_size + 1)
+        time_vector_seconds = np.linspace(window_perclos / sampling_rate, frame_count / sampling_rate,
+                                          frame_count - window_perclos + 1)
         time_vector_minutes = time_vector_seconds / 60
-
-        plt.plot(time_vector_minutes, suma)
+        perclos = [s * 100 for s in suma]
+        plt.plot(time_vector_minutes, perclos)
         plt.xlabel("Czas [min]")
         plt.ylabel("PERCLOS [%]")
         plt.show()

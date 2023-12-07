@@ -18,7 +18,7 @@ with open('data1.csv', 'r') as csvfile:
     normalization = [(x - min_val) / (max_val - min_val) for x in data]
     data = normalization
 
-    window_size = 2400
+    window_size = 30*30
     thresholds = []
     initial_threshold = (np.median(data[:window_size]) + np.percentile(data, 1)) / 2
     thresholds.extend([initial_threshold] * window_size)

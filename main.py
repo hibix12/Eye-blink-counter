@@ -1,10 +1,9 @@
 import csv
 import time
+
 import cv2 as cv
 import dlib
 import numpy as np
-import scipy
-from matplotlib import pyplot as plt
 from scipy.spatial import distance as dist
 
 # Global Configuration Variables
@@ -62,9 +61,9 @@ while True:
 
         leftEyeHull = cv.convexHull(leftEye)
         rightEyeHull = cv.convexHull(rightEye)
-
-        cv.drawContours(frame, [leftEyeHull], -1, (255, 0, 0), 2)
-        cv.drawContours(frame, [rightEyeHull], -1, (255, 0, 0), 2)
+        connected = np.concatenate((rightEye, leftEye), axis=0)
+        for x, y in connected:
+            cv.circle(frame, (x, y), 2, (0, 255, 0), -1)
 
         counter += 1
         cv.putText(
